@@ -1,32 +1,61 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import {
+	error, // creates error Responses
+	json, // creates JSON Responses
+	Router, // the Router itself
+	withParams, // middleware to extract params into the Request itself
+} from 'itty-router';
+import { createClient } from '@supabase/supabase-js';
 
 export interface Env {
-	// Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
-	// MY_KV_NAMESPACE: KVNamespace;
-	//
-	// Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
-	// MY_DURABLE_OBJECT: DurableObjectNamespace;
-	//
-	// Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
-	// MY_BUCKET: R2Bucket;
-	//
-	// Example binding to a Service. Learn more at https://developers.cloudflare.com/workers/runtime-apis/service-bindings/
-	// MY_SERVICE: Fetcher;
-	//
-	// Example binding to a Queue. Learn more at https://developers.cloudflare.com/queues/javascript-apis/
-	// MY_QUEUE: Queue;
+	NEXT_PUBLIC_SUPABASE_URL: string;
+	NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
 }
 
+const router = Router();
+
+router.get('/', () => {
+	return new Response('This is the Cloudflare Worker for my Todo App!');
+});
+
+router.get('/api/tasks', async (request: Request, env: Env) => {
+	const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
+	try {
+		const { data: tasks, error } = await supabase.from('tasks').select();
+
+		if (error) {
+			console.log('Supabase error returned', error);
+			throw error;
+		}
+
+		console.log('Fetched tasks successfully', tasks);
+
+		return Response.json(tasks);
+	} catch (error) {
+		console.log('Catch error returned', error);
+		return Response.json({ error: error });
+	}
+});
+
+/*
+This is the last route we define, it will match anything that hasn't hit a route we've defined
+above, therefore it's useful as a 404 (and avoids us hitting worker exceptions, so make sure to include it!).
+
+Visit any page that doesn't exist (e.g. /foobar) to see it in action.
+*/
+router.all('*', () => new Response('404, not found!', { status: 404 }));
+
+/*
+This snippet ties our worker to the router we deifned above, all incoming requests
+are passed to the router where your routes are called and the response is sent.
+*/
+addEventListener('fetch', (e) => {
+	e.respondWith(router.handle(e.request));
+});
+
+/*
+Make request, env, context available to all routes as per docs: https://itty.dev/itty-router
+*/
 export default {
-	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-		return new Response('Hello World!');
-	},
+	fetch: async (request: Request, env: Env, ctx: ExecutionContext) => router.handle(request, env, ctx).then(json).catch(error),
 };

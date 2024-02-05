@@ -5,8 +5,10 @@ compatibility_date = "2024-01-29"
 # Variable bindings. These are arbitrary, plaintext strings (similar to environment variables)
 # Note: Use secrets to store sensitive data.
 # Docs: https://developers.cloudflare.com/workers/platform/environment-variables
-# [vars]
-# MY_VARIABLE = "production_value"
+[vars]
+NEXT_PUBLIC_SUPABASE_URL = "https://sxuuvagbvqjyrzduppdl.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY= "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN4dXV2YWdidnFqeXJ6ZHVwcGRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDcwNjk5MjIsImV4cCI6MjAyMjY0NTkyMn0.H4FRLhGUjj_V5UNQgPsRT428q9IEpuN8h5Xpm5wAmK0"
+
 
 # Bind a KV Namespace. Use KV as persistent storage for small key-value pairs.
 # Docs: https://developers.cloudflare.com/workers/runtime-apis/kv
